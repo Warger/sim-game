@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from simulation.components import Needs, Traits, Body, Position, Memory, Identity; print\\(''Needs:'', Needs\\(\\)\\); print\\(''Traits:'', Traits\\(\\)\\); print\\(''Body:'', Body\\(\\)\\); print\\(''Position:'', Position\\(\\)\\); print\\(''Memory:'', Memory\\(\\)\\); print\\(''Identity:'', Identity\\(\\)\\)\")",
+      "Bash(python -c \":*)",
+      "Bash(python main.py --headless --ticks 1920)"
+    ]
+  }
+}
