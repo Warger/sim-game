@@ -129,6 +129,18 @@ class PathCache:
         self._cache[eid] = (start, goal, path)
         return path
 
+    def trim_path(self, eid: int, steps_taken: int) -> None:
+        """Remove consumed waypoints from cached path after movement."""
+        cached = self._cache.get(eid)
+        if cached is None:
+            return
+        start, goal, path = cached
+        if steps_taken < len(path):
+            new_start = path[steps_taken - 1] if steps_taken > 0 else start
+            self._cache[eid] = (new_start, goal, path[steps_taken:])
+        else:
+            self._cache.pop(eid, None)
+
     def invalidate(self, eid: int) -> None:
         self._cache.pop(eid, None)
 

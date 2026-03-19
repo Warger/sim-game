@@ -22,6 +22,7 @@ DecisionSystem — utility-based AI, выбор действия каждый т
 from __future__ import annotations
 
 import logging
+import math
 import random
 from collections import Counter
 from typing import Dict, Optional, Tuple
@@ -60,6 +61,7 @@ class DecisionSystem:
         night = is_night(world)
         self._action_counts.clear()
 
+
         for eid, pos in world.get_all_with(Position):
             # Не перебивать текущее действие (кроме сна при критическом голоде/жажде)
             if pos.action_timer > 0:
@@ -90,6 +92,20 @@ class DecisionSystem:
             needs = world.get_component(eid, Needs)
             if needs is None:
                 continue
+
+            # ── Commitment: не перерешаем go_* пока агент идёт к цели ──
+            if (pos.current_action in ("go_eat", "go_drink", "go_sleep")
+                    and pos.target_x is not None):
+                # Критическая жажда перебивает go_eat
+                if (pos.current_action == "go_eat"
+                        and needs.thirst <= config.CRITICAL_THRESHOLD.get("thirst", 0.2)):
+                    pos.current_action = None
+                    pos.target_x = None
+                    pos.target_y = None
+                    # Продолжаем — примем новое решение ниже
+                else:
+                    self._action_counts[pos.current_action] += 1
+                    continue
 
             body = world.get_component(eid, Body)
             if body is not None and body.is_child:
@@ -165,10 +181,10 @@ class DecisionSystem:
                 # Идём к ближайшему взрослому агенту
                 target = self._find_nearest_agent(world, eid, pos)
 
-            # wander: ограниченный радиус, расширенный при exploration
+            # wander: frontier exploration если есть память, иначе случайный
             if chosen_action == "wander":
                 exploring = mem.exploring if mem is not None else False
-                target = self._pick_wander_target(pos, exploring)
+                target = self._pick_wander_target(pos, exploring, mem)
 
             # ── Записываем решение ────────────────────────────────
             pos.current_action = chosen_action
@@ -199,9 +215,34 @@ class DecisionSystem:
 
     @staticmethod
     def _pick_wander_target(
-        pos: Position, exploring: bool = False
+        pos: Position, exploring: bool = False, mem=None,
     ) -> Tuple[int, int]:
-        """Случайное смещение в пределах WANDER_RADIUS (или EXPLORE при миграции)."""
+        """Frontier exploration: идём к краю известных тайлов в случайном направлении.
+
+        Fallback на случайный wander если память пуста.
+        """
+        # Frontier: выбираем случайное направление и ищем самый дальний
+        # известный тайл в этом направлении → идём к границе знаний
+        if mem is not None and len(mem.known_tiles) > 10:
+            angle = random.random() * 2.0 * math.pi
+            dir_x, dir_y = math.cos(angle), math.sin(angle)
+            cx, cy = pos.tile_x, pos.tile_y
+
+            best = None
+            best_dot = -float("inf")
+            # Сэмплируем до 200 тайлов для скорости
+            tiles = mem.known_tiles
+            if len(tiles) > 200:
+                tiles = random.sample(list(tiles), 200)
+            for t in tiles:
+                dot = (t[0] - cx) * dir_x + (t[1] - cy) * dir_y
+                if dot > best_dot:
+                    best_dot = dot
+                    best = t
+            if best is not None:
+                return best
+
+        # Fallback — случайный wander
         wander_r = (
             config.EXPLORE_WANDER_RADIUS if exploring else config.WANDER_RADIUS
         )

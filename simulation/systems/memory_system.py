@@ -70,15 +70,23 @@ class MemorySystem:
                     if tile.gives_food and tile.passable:
                         if "food" not in mem.resource_locations:
                             mem.resource_locations["food"] = set()
-                        mem.resource_locations["food"].add(coord)
+                        locs = mem.resource_locations["food"]
+                        locs.add(coord)
+                        if len(locs) > config.MAX_RESOURCE_MEMORY:
+                            farthest = max(locs, key=lambda t: (t[0]-cx)**2 + (t[1]-cy)**2)
+                            locs.discard(farthest)
                     if tile.gives_water and tile.passable:
                         if "water" not in mem.resource_locations:
                             mem.resource_locations["water"] = set()
-                        mem.resource_locations["water"].add(coord)
+                        locs = mem.resource_locations["water"]
+                        locs.add(coord)
+                        if len(locs) > config.MAX_RESOURCE_MEMORY:
+                            farthest = max(locs, key=lambda t: (t[0]-cx)**2 + (t[1]-cy)**2)
+                            locs.discard(farthest)
 
     @staticmethod
     def get_nearest_resource(
-        world: World, eid: int, resource_type: str
+        world: World, eid: int, resource_type: str,
     ) -> Optional[Tuple[int, int]]:
         """Возвращает (tile_x, tile_y) ближайшего известного ресурса или None."""
         mem = world.get_component(eid, Memory)
@@ -148,6 +156,12 @@ class MemorySystem:
             if resource_type not in mem.resource_locations:
                 mem.resource_locations[resource_type] = set()
             mem.resource_locations[resource_type].update(other_locs)
+
+            # Обрезаем до лимита — оставляем ближайшие
+            locs = mem.resource_locations[resource_type]
+            while len(locs) > config.MAX_RESOURCE_MEMORY:
+                farthest = max(locs, key=lambda t: (t[0]-cx)**2 + (t[1]-cy)**2)
+                locs.discard(farthest)
 
             mem.ask_cooldown = config.ASK_RESOURCE_COOLDOWN_TICKS
 

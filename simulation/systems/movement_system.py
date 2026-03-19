@@ -133,6 +133,7 @@ class MovementSystem:
             steps = int(config.AGENT_BASE_SPEED)
             final_tile = start
             advanced = False
+            waypoints_consumed = 0
 
             for wp in path:
                 if steps <= 0:
@@ -144,14 +145,23 @@ class MovementSystem:
                 if not world.map.is_passable(wp[0], wp[1]):
                     break
 
-                # Occupancy check
+                # Occupancy check — try sidestep if blocked
                 occupant = occupied.get(wp)
                 if occupant is not None and occupant != eid:
+                    side = self._try_sidestep(
+                        pos, wp, world.map, occupied, eid
+                    )
+                    if side is not None:
+                        final_tile = side
+                        steps -= 1
+                        advanced = True
+                        waypoints_consumed += 1
                     break
 
                 final_tile = wp
                 steps -= 1
                 advanced = True
+                waypoints_consumed += 1
 
             if advanced:
                 old_tile: Coord = (pos.tile_x, pos.tile_y)
@@ -167,8 +177,8 @@ class MovementSystem:
                 pos.float_x = float(final_tile[0])
                 pos.float_y = float(final_tile[1])
 
-                # Invalidate cached path since start changed
-                self._path_cache.invalidate(eid)
+                # Trim consumed waypoints instead of full recompute
+                self._path_cache.trim_path(eid, waypoints_consumed)
 
                 # Reached goal
                 if final_tile == goal:
@@ -268,6 +278,32 @@ class MovementSystem:
             occupied[g_tile] = c_eid
         if g_eid is not None:
             occupied[c_tile] = g_eid
+
+    @staticmethod
+    def _try_sidestep(
+        pos: Position,
+        blocked: Coord,
+        tile_map,
+        occupied: Dict[Coord, int],
+        eid: int,
+    ) -> Optional[Coord]:
+        """Try stepping to a side tile when the path is blocked."""
+        cx, cy = pos.tile_x, pos.tile_y
+        bx, by = blocked
+        dx, dy = bx - cx, by - cy
+        if dx == 0 and dy == 0:
+            return None
+        # Two perpendicular options
+        sides = [(-dy, dx), (dy, -dx)]
+        for sdx, sdy in sides:
+            nx, ny = cx + sdx, cy + sdy
+            if not tile_map.is_passable(nx, ny):
+                continue
+            occ = occupied.get((nx, ny))
+            if occ is not None and occ != eid:
+                continue
+            return (nx, ny)
+        return None
 
     @staticmethod
     def _pick_escape_target(pos: Position, tile_map) -> Coord:

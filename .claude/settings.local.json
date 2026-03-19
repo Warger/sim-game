@@ -13,7 +13,12 @@
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(cat :*)",
+      "Bash(ls :*)",
+      "Bash(head :*)",
+      "Bash(wc :*)",
+      "Bash(sleep :*)"
     ]
   }
 }
