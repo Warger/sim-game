@@ -76,27 +76,6 @@ def test_low_thirst_picks_go_drink():
     assert pos.current_action == "go_drink", f"Expected go_drink, got {pos.current_action}"
 
 
-def test_emergency_thirst_override():
-    """Emergency override: thirst < 0.5 + last_successful water → go to that location."""
-    world = _make_world()
-    needs = Needs(hunger=1.0, thirst=0.4, energy=1.0,
-                  health=1.0, mood=1.0, social=1.0, safety=1.0)
-    eid = _add_agent(world, needs=needs, curiosity=0.0)
-
-    mem = world.get_component(eid, Memory)
-    mem.last_successful["water"] = (5, 5)
-
-    _rebuild_spatial(world)
-
-    system = DecisionSystem()
-    system.update(world)
-
-    pos = world.get_component(eid, Position)
-    assert pos.current_action == "go_drink", f"Expected go_drink, got {pos.current_action}"
-    assert pos.target_x == 5 and pos.target_y == 5, \
-        f"Expected target (5,5), got ({pos.target_x}, {pos.target_y})"
-
-
 def test_children_skip_decisions():
     """Children should not have their action changed by DecisionSystem."""
     world = _make_world()

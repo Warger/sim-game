@@ -1,9 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c \"from simulation.components import Needs, Traits, Body, Position, Memory, Identity; print\\(''Needs:'', Needs\\(\\)\\); print\\(''Traits:'', Traits\\(\\)\\); print\\(''Body:'', Body\\(\\)\\); print\\(''Position:'', Position\\(\\)\\); print\\(''Memory:'', Memory\\(\\)\\); print\\(''Identity:'', Identity\\(\\)\\)\")",
-      "Bash(python -c \":*)",
-      "Bash(python main.py --headless --ticks 1920)"
+      "Bash(python -c :*)",
+      "Bash(python tools/batch_run.py:*)",
+      "Bash(python tools/analyze.py:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python main.py --headless:*)",
+      "Bash(mkdir:*)"
     ]
   }
 }

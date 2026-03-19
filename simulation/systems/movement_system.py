@@ -117,24 +117,8 @@ class MovementSystem:
             path = self._path_cache.get_path(eid, world.map, start, goal)
 
             if not path:
-                # No path found
+                # No path found — escape instead of retrying same target
                 self._path_cache.invalidate(eid)
-                if pos.current_action in ("go_drink", "go_eat"):
-                    # Critical action — move greedily toward target
-                    greedy = self._greedy_step(pos, goal, world.map, occupied, eid)
-                    if greedy is not None:
-                        old_tile = (pos.tile_x, pos.tile_y)
-                        if occupied.get(old_tile) == eid:
-                            del occupied[old_tile]
-                        occupied[greedy] = eid
-                        pos.prev_tile_x = pos.tile_x
-                        pos.prev_tile_y = pos.tile_y
-                        pos.tile_x = greedy[0]
-                        pos.tile_y = greedy[1]
-                        pos.float_x = float(greedy[0])
-                        pos.float_y = float(greedy[1])
-                    continue
-                # Non-critical — escape to random nearby tile
                 escape = self._pick_escape_target(pos, world.map)
                 pos.target_x, pos.target_y = escape
                 pos.path.clear()
@@ -149,7 +133,6 @@ class MovementSystem:
             steps = int(config.AGENT_BASE_SPEED)
             final_tile = start
             advanced = False
-            waypoints_consumed = 0
 
             for wp in path:
                 if steps <= 0:
@@ -169,7 +152,6 @@ class MovementSystem:
                 final_tile = wp
                 steps -= 1
                 advanced = True
-                waypoints_consumed += 1
 
             if advanced:
                 old_tile: Coord = (pos.tile_x, pos.tile_y)
@@ -185,8 +167,8 @@ class MovementSystem:
                 pos.float_x = float(final_tile[0])
                 pos.float_y = float(final_tile[1])
 
-                # Trim consumed waypoints instead of full recompute
-                self._path_cache.trim_path(eid, waypoints_consumed)
+                # Invalidate cached path since start changed
+                self._path_cache.invalidate(eid)
 
                 # Reached goal
                 if final_tile == goal:
@@ -286,35 +268,6 @@ class MovementSystem:
             occupied[g_tile] = c_eid
         if g_eid is not None:
             occupied[c_tile] = g_eid
-
-    @staticmethod
-    def _greedy_step(
-        pos: Position,
-        goal: Coord,
-        tile_map,
-        occupied: Dict[Coord, int],
-        eid: int,
-    ) -> Optional[Coord]:
-        """Move one step toward goal, picking best passable neighbor."""
-        cx, cy = pos.tile_x, pos.tile_y
-        gx, gy = goal
-        best: Optional[Coord] = None
-        best_dist = max(abs(cx - gx), abs(cy - gy))
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                if dx == 0 and dy == 0:
-                    continue
-                nx, ny = cx + dx, cy + dy
-                if not tile_map.is_passable(nx, ny):
-                    continue
-                occupant = occupied.get((nx, ny))
-                if occupant is not None and occupant != eid:
-                    continue
-                d = max(abs(nx - gx), abs(ny - gy))
-                if d < best_dist:
-                    best_dist = d
-                    best = (nx, ny)
-        return best
 
     @staticmethod
     def _pick_escape_target(pos: Position, tile_map) -> Coord:

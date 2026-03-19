@@ -58,7 +58,6 @@ MAX_AGENTS_PER_RESOURCE_TILE = 8   # макс. агентов кормящихс
 # ── Агент — движение ─────────────────────────────────────────────────
 
 AGENT_BASE_SPEED = 3.0             # тайлов/тик
-MAX_ASTAR_ITERATIONS = 10000       # лимит итераций A*, fallback на wander
 AGENT_VISION_RADIUS = 30           # тайлов
 VISION_UPDATE_INTERVAL = 20        # тиков между полными обновлениями видимости
 
@@ -129,7 +128,7 @@ UTILITY_NIGHT_MODIFIER = {
 CURIOSITY_FACTOR = 0.2
 
 # Wander: макс. радиус случайного блуждания (тайлов)
-WANDER_RADIUS = 25
+WANDER_RADIUS = 75
 
 # ── Социализация ──────────────────────────────────────────────────────
 
@@ -223,11 +222,11 @@ CHILD_PASSIVE_RESTORE = 0.0004     # восстановление thirst/hunger 
 HOME_COMFORT_INITIAL = 0.5
 HOME_COMFORT_MAX = 1.0
 HOME_COMFORT_DECAY = 0.0001         # пассивный decay/тик
-HOME_COMFORT_SUCCESS_BONUS = 0.05   # бонус за успешное eating/drinking/socializing
-HOME_COMFORT_FAIL_DROP = 0.05       # штраф за неудачный поиск ресурса
+HOME_COMFORT_SUCCESS_BONUS = 0.02   # бонус за успешное eating/drinking/socializing
+HOME_COMFORT_FAIL_DROP = 0.15       # штраф за неудачный поиск ресурса
 HOME_COMFORT_EXPLORE_THRESHOLD = 0.3  # ниже → режим exploration
 HOME_COMFORT_CURIOSITY_FACTOR = 0.3   # curiosity снижает порог миграции
-EXPLORE_WANDER_RADIUS = 50          # радиус wander в exploration mode
+EXPLORE_WANDER_RADIUS = 200         # радиус wander в exploration mode
 
 # ── Память агента ──────────────────────────────────────────────────
 MEMORY_KNOWN_TILES_LIMIT = 5000     # макс. запомненных тайлов (LRU-eviction)

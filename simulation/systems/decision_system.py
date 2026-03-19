@@ -98,15 +98,6 @@ class DecisionSystem:
             traits = world.get_component(eid, Traits)
             mem = world.get_component(eid, Memory)
 
-            # ── Emergency: low thirst + known water → go drink ──
-            if needs.thirst < 0.5 and mem is not None:
-                last_water = mem.last_successful.get("water")
-                if last_water is not None:
-                    pos.current_action = "go_drink"
-                    pos.target_x, pos.target_y = last_water
-                    self._action_counts["go_drink"] += 1
-                    continue
-
             # ── Расчёт весов ──────────────────────────────────────
             weights: Dict[str, float] = {}
             for need_name, base_w in config.UTILITY_BASE_WEIGHT.items():

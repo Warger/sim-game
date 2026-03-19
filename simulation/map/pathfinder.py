@@ -20,7 +20,6 @@ from __future__ import annotations
 import heapq
 from typing import Dict, List, Optional, Tuple
 
-import config
 from simulation.map.tile import TileMap
 
 Coord = Tuple[int, int]
@@ -54,12 +53,7 @@ def find_path(
     came_from: Dict[Coord, Optional[Coord]] = {start: None}
     g_score: Dict[Coord, float] = {start: 0.0}
 
-    iterations = 0
     while open_heap:
-        iterations += 1
-        if iterations > config.MAX_ASTAR_ITERATIONS:
-            return []
-
         _, current = heapq.heappop(open_heap)
 
         if current == goal:
@@ -134,18 +128,6 @@ class PathCache:
         path = find_path(tile_map, start, goal)
         self._cache[eid] = (start, goal, path)
         return path
-
-    def trim_path(self, eid: int, steps_taken: int) -> None:
-        """Remove consumed waypoints from cached path after movement."""
-        cached = self._cache.get(eid)
-        if cached is None:
-            return
-        start, goal, path = cached
-        if steps_taken < len(path):
-            new_start = path[steps_taken - 1] if steps_taken > 0 else start
-            self._cache[eid] = (new_start, goal, path[steps_taken:])
-        else:
-            self._cache.pop(eid, None)
 
     def invalidate(self, eid: int) -> None:
         self._cache.pop(eid, None)
