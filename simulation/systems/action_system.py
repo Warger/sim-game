@@ -78,11 +78,28 @@ class ActionSystem:
             if pos.target_x is None or pos.target_y is None:
                 continue
 
-            if pos.tile_x != pos.target_x or pos.tile_y != pos.target_y:
-                continue
-
-            # Агент на месте — запускаем действие
             action_name, _ = _GO_TO_ACTION[pos.current_action]
+
+            # Для eating/drinking: достаточно быть РЯДОМ с ресурсным тайлом
+            if action_name in ("eating", "drinking"):
+                resource = "food" if action_name == "eating" else "water"
+                if not world.map.resource_tiles_near(
+                    pos.tile_x, pos.tile_y, resource
+                ):
+                    # Не рядом с ресурсом — проверяем дошёл ли до цели
+                    if pos.tile_x != pos.target_x or pos.tile_y != pos.target_y:
+                        continue
+                    # Дошёл до цели но ресурса нет — сбрасываем
+                    pos.current_action = None
+                    pos.target_x = None
+                    pos.target_y = None
+                    continue
+            else:
+                # sleeping: exact target match
+                if pos.tile_x != pos.target_x or pos.tile_y != pos.target_y:
+                    continue
+
+            # Агент рядом с ресурсом (или на месте для сна) — запускаем действие
             duration = config.ACTION_DURATION[action_name]
 
             pos.current_action = action_name

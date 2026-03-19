@@ -6,7 +6,14 @@
       "Bash(python tools/analyze.py:*)",
       "Bash(python -m pytest:*)",
       "Bash(python main.py --headless:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
     ]
   }
 }
