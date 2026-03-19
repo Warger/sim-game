@@ -68,6 +68,14 @@ class ActionSystem:
 
                 pos.action_timer -= 1
 
+                # Раннее пробуждение: сон завершается когда energy полная
+                # но не раньше чем через половину длительности (минимум 3ч сна)
+                if pos.current_action == "sleeping" and needs is not None:
+                    min_sleep = config.ACTION_DURATION["sleeping"] * 2 // 3
+                    slept = config.ACTION_DURATION["sleeping"] - pos.action_timer
+                    if needs.energy >= 1.0 and slept >= min_sleep:
+                        pos.action_timer = 0
+
                 if pos.action_timer == 0:
                     self._finish_action(world, eid, pos, needs)
                 continue

@@ -70,12 +70,12 @@ STEERING_SEPARATION_WEIGHT = 0.5
 NEED_DECAY = {
     "hunger":   0.0005,
     "thirst":   0.0008,
-    "energy":   0.001,
+    "energy":   0.0004,
     "health":   0.0,       # убывает только у стариков (см. ELDER_HEALTH_DECAY)
     "mood":     0.00025,
     "social":   0.0005,
     "safety":   0.0005,
-    "activity": 0.0008,    # потребность в занятости, decay ~= thirst
+    "activity": 0.0015,    # потребность в занятости, decay быстрый → 8ч/день
 }
 
 # Критические пороги
@@ -96,9 +96,9 @@ DEATH_TICKS_AT_ZERO = {
 
 # Длительность действий (тики)
 ACTION_DURATION = {
-    "eating":       80,       # ~2 часа
+    "eating":       40,       # ~1 час (как питьё)
     "drinking":     40,       # ~1 час
-    "sleeping":     320,      # ~8 часов
+    "sleeping":     240,      # ~6 часов
     "local_wander": 160,      # ~4 часа (activity: быт, позже — работа)
 }
 
@@ -111,7 +111,7 @@ UTILITY_BASE_WEIGHT = {
     "hunger":   1.3,
     "health":   1.2,
     "energy":   1.1,
-    "activity": 1.0,      # потребность в занятости (конкурент sleep)
+    "activity": 1.3,      # потребность в занятости (конкурент sleep)
     "safety":   1.0,
     "social":   0.8,      # домножается на sociality trait
     "mood":     0.7,
@@ -129,7 +129,7 @@ UTILITY_NIGHT_MODIFIER = {
 }
 
 # Curiosity: вероятность случайного действия = curiosity * CURIOSITY_FACTOR
-CURIOSITY_FACTOR = 0.2
+CURIOSITY_FACTOR = 0.1
 
 # Wander: макс. радиус случайного блуждания (тайлов)
 WANDER_RADIUS = 75

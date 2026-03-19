@@ -76,10 +76,6 @@ class NeedsSystem:
                     if pos is not None and pos.current_action == "local_wander":
                         continue
 
-                # Energy быстрее ночью
-                if need_name == "energy" and night:
-                    rate *= config.UTILITY_NIGHT_MODIFIER["energy"]
-
                 # Sociality trait модифицирует social decay
                 if need_name == "social" and traits is not None:
                     rate *= (0.5 + traits.sociality)
