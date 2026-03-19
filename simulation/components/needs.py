@@ -20,3 +20,4 @@ class Needs:
     mood: float = field(default_factory=lambda: config.START_NEEDS_MAX)
     social: float = field(default_factory=lambda: config.START_NEEDS_MAX)
     safety: float = field(default_factory=lambda: config.START_NEEDS_MAX)
+    activity: float = 0.5  # стартует ниже — агенты сразу хотят заняться делом

@@ -39,9 +39,10 @@ logger = logging.getLogger(__name__)
 
 # go_action → (in-place action name, need to restore)
 _GO_TO_ACTION: Dict[str, Tuple[str, str]] = {
-    "go_eat":   ("eating",   "hunger"),
-    "go_drink": ("drinking", "thirst"),
-    "go_sleep": ("sleeping", "energy"),
+    "go_eat":      ("eating",       "hunger"),
+    "go_drink":    ("drinking",     "thirst"),
+    "go_sleep":    ("sleeping",     "energy"),
+    "go_activity": ("local_wander", "activity"),
 }
 
 # Reverse: in-place action → need to restore
@@ -93,6 +94,12 @@ class ActionSystem:
                     pos.current_action = None
                     pos.target_x = None
                     pos.target_y = None
+                    continue
+            elif action_name == "local_wander":
+                # local_wander: достаточно быть в радиусе 3 от цели
+                dx = abs(pos.tile_x - pos.target_x)
+                dy = abs(pos.tile_y - pos.target_y)
+                if max(dx, dy) > 3:
                     continue
             else:
                 # sleeping: exact target match

@@ -71,6 +71,11 @@ class NeedsSystem:
                     if sleeping:
                         continue
 
+                # Activity не падает во время local_wander (занятость восстанавливается)
+                if need_name == "activity":
+                    if pos is not None and pos.current_action == "local_wander":
+                        continue
+
                 # Energy быстрее ночью
                 if need_name == "energy" and night:
                     rate *= config.UTILITY_NIGHT_MODIFIER["energy"]

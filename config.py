@@ -68,13 +68,14 @@ STEERING_SEPARATION_WEIGHT = 0.5
 # ── Потребности — decay за тик ───────────────────────────────────────
 
 NEED_DECAY = {
-    "hunger": 0.0005,
-    "thirst": 0.0008,
-    "energy": 0.001,
-    "health": 0.0,       # убывает только у стариков (см. ELDER_HEALTH_DECAY)
-    "mood":   0.00025,
-    "social": 0.0005,
-    "safety": 0.0005,
+    "hunger":   0.0005,
+    "thirst":   0.0008,
+    "energy":   0.001,
+    "health":   0.0,       # убывает только у стариков (см. ELDER_HEALTH_DECAY)
+    "mood":     0.00025,
+    "social":   0.0005,
+    "safety":   0.0005,
+    "activity": 0.0008,    # потребность в занятости, decay ~= thirst
 }
 
 # Критические пороги
@@ -95,9 +96,10 @@ DEATH_TICKS_AT_ZERO = {
 
 # Длительность действий (тики)
 ACTION_DURATION = {
-    "eating":   80,       # ~2 часа
-    "drinking": 40,       # ~1 час
-    "sleeping": 320,      # ~8 часов
+    "eating":       80,       # ~2 часа
+    "drinking":     40,       # ~1 час
+    "sleeping":     320,      # ~8 часов
+    "local_wander": 160,      # ~4 часа (activity: быт, позже — работа)
 }
 
 # Все три восстанавливают потребность до 1.0
@@ -105,23 +107,25 @@ ACTION_DURATION = {
 # ── Utility AI — веса ────────────────────────────────────────────────
 
 UTILITY_BASE_WEIGHT = {
-    "thirst": 1.5,
-    "hunger": 1.3,
-    "health": 1.2,
-    "energy": 1.1,
-    "safety": 1.0,
-    "social": 0.8,        # домножается на sociality trait
-    "mood":   0.7,
+    "thirst":   1.5,
+    "hunger":   1.3,
+    "health":   1.2,
+    "energy":   1.1,
+    "activity": 1.0,      # потребность в занятости (конкурент sleep)
+    "safety":   1.0,
+    "social":   0.8,      # домножается на sociality trait
+    "mood":     0.7,
 }
 
 UTILITY_NIGHT_MODIFIER = {
-    "thirst": 1.0,
-    "hunger": 1.0,
-    "health": 1.0,
-    "energy": 2.0,
-    "safety": 1.0,
-    "social": 0.5,
-    "mood":   0.5,
+    "thirst":   1.0,
+    "hunger":   1.0,
+    "health":   1.0,
+    "energy":   2.0,
+    "activity": 0.3,      # ночью не хочется заниматься делами
+    "safety":   1.0,
+    "social":   0.5,
+    "mood":     0.5,
 }
 
 # Curiosity: вероятность случайного действия = curiosity * CURIOSITY_FACTOR
@@ -129,6 +133,7 @@ CURIOSITY_FACTOR = 0.2
 
 # Wander: макс. радиус случайного блуждания (тайлов)
 WANDER_RADIUS = 75
+ACTIVITY_WANDER_RADIUS = 15          # радиус local_wander (быт рядом с домом)
 
 # ── Социализация ──────────────────────────────────────────────────────
 

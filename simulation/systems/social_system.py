@@ -55,9 +55,8 @@ class SocialSystem:
             if mem.social_cooldown > 0:
                 mem.social_cooldown -= 1
 
-        # Инициаторы: wants_social, не спит, не ребёнок, cooldown == 0
+        # Все взрослые не спящие агенты с cooldown == 0 — потенциальные участники
         initiators: List[Tuple[int, Position, Needs, Memory]] = []
-        # Доступные собеседники: любой взрослый не спящий
         available: dict = {}  # eid → (pos, needs, mem)
         for eid, mem in world.get_all_with(Memory):
             body = world.get_component(eid, Body)
@@ -72,7 +71,7 @@ class SocialSystem:
 
             available[eid] = (pos, needs, mem)
 
-            if mem.wants_social and mem.social_cooldown <= 0:
+            if mem.social_cooldown <= 0:
                 initiators.append((eid, pos, needs, mem))
 
         if not initiators:

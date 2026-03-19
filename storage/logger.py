@@ -146,6 +146,7 @@ class SimLogger:
                     "mood": round(needs.mood, 4),
                     "social": round(needs.social, 4),
                     "safety": round(needs.safety, 4),
+                    "activity": round(needs.activity, 4),
                 }
 
             if traits:
@@ -183,6 +184,7 @@ class SimLogger:
         sums: Dict[str, float] = {
             "hunger": 0.0, "thirst": 0.0, "energy": 0.0,
             "health": 0.0, "mood": 0.0, "social": 0.0, "safety": 0.0,
+            "activity": 0.0,
         }
         for _, needs in agents:
             for key in sums:

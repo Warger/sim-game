@@ -41,13 +41,14 @@ logger = logging.getLogger(__name__)
 
 # Потребность → какое действие запускать
 _NEED_TO_ACTION: Dict[str, str] = {
-    "thirst": "go_drink",
-    "hunger": "go_eat",
-    "energy": "go_sleep",
-    "social": "socialize",
-    "safety": "wander",
-    "mood":   "wander",
-    "health": "wander",
+    "thirst":   "go_drink",
+    "hunger":   "go_eat",
+    "energy":   "go_sleep",
+    "activity": "go_activity",
+    "social":   "socialize",
+    "safety":   "wander",
+    "mood":     "wander",
+    "health":   "wander",
 }
 
 
@@ -65,13 +66,12 @@ class DecisionSystem:
         for eid, pos in world.get_all_with(Position):
             # Не перебивать текущее действие (кроме сна при критическом голоде/жажде)
             if pos.action_timer > 0:
-                if pos.current_action == "sleeping":
+                if pos.current_action in ("sleeping", "local_wander"):
                     needs_check = world.get_component(eid, Needs)
                     if needs_check is not None:
                         hunger_crit = needs_check.hunger <= config.CRITICAL_THRESHOLD.get("hunger", 0.2)
                         thirst_crit = needs_check.thirst <= config.CRITICAL_THRESHOLD.get("thirst", 0.2)
                         if hunger_crit or thirst_crit:
-                            # Просыпаемся — сбрасываем сон
                             pos.action_timer = 0
                             pos.current_action = None
                             world.event_queue.append({
@@ -80,9 +80,8 @@ class DecisionSystem:
                                 "reason": "hunger" if hunger_crit else "thirst",
                                 "tick": world.tick,
                             })
-                            # Продолжаем дальше — примем новое решение ниже
                         else:
-                            self._action_counts["sleeping"] += 1
+                            self._action_counts[pos.current_action] += 1
                             continue
                 else:
                     if pos.current_action:
@@ -94,15 +93,19 @@ class DecisionSystem:
                 continue
 
             # ── Commitment: не перерешаем go_* пока агент идёт к цели ──
-            if (pos.current_action in ("go_eat", "go_drink", "go_sleep")
+            if (pos.current_action in ("go_eat", "go_drink", "go_sleep", "go_activity")
                     and pos.target_x is not None):
-                # Критическая жажда перебивает go_eat
-                if (pos.current_action == "go_eat"
-                        and needs.thirst <= config.CRITICAL_THRESHOLD.get("thirst", 0.2)):
+                # Критическая жажда перебивает go_eat и go_activity
+                crit_thirst = needs.thirst <= config.CRITICAL_THRESHOLD.get("thirst", 0.2)
+                crit_hunger = needs.hunger <= config.CRITICAL_THRESHOLD.get("hunger", 0.2)
+                if pos.current_action in ("go_eat", "go_activity") and crit_thirst:
                     pos.current_action = None
                     pos.target_x = None
                     pos.target_y = None
-                    # Продолжаем — примем новое решение ниже
+                elif pos.current_action == "go_activity" and crit_hunger:
+                    pos.current_action = None
+                    pos.target_x = None
+                    pos.target_y = None
                 else:
                     self._action_counts[pos.current_action] += 1
                     continue
@@ -171,6 +174,14 @@ class DecisionSystem:
                                 0.0,
                                 mem.home_comfort - config.HOME_COMFORT_FAIL_DROP,
                             )
+
+            elif chosen_action == "go_activity":
+                r = config.ACTIVITY_WANDER_RADIUS
+                dx = random.randint(-r, r)
+                dy = random.randint(-r, r)
+                tx = max(0, min(config.MAP_WIDTH - 1, pos.tile_x + dx))
+                ty = max(0, min(config.MAP_HEIGHT - 1, pos.tile_y + dy))
+                target = (tx, ty)
 
             elif chosen_action == "go_sleep":
                 target = (pos.tile_x, pos.tile_y)
