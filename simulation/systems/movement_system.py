@@ -69,12 +69,20 @@ class MovementSystem:
         for eid, pos in agents:
             occupied[(pos.tile_x, pos.tile_y)] = eid
 
+        # Index: parent eid -> set of child eids (for passthrough)
+        children_of: Dict[int, set] = {}
+        for eid, identity in world.get_all_with(Identity):
+            if identity.guardian_id is not None:
+                b = world.get_component(eid, Body)
+                if b is not None and b.is_child:
+                    children_of.setdefault(identity.guardian_id, set()).add(eid)
+
         for eid, pos in agents:
             body = world.get_component(eid, Body)
             identity = world.get_component(eid, Identity)
 
-            # Busy agents don't move (eating, drinking, sleeping)
-            if pos.current_action in ("eating", "drinking", "sleeping"):
+            # Busy agents don't move (eating, drinking, sleeping, local_wander)
+            if pos.current_action in ("eating", "drinking", "sleeping", "local_wander"):
                 continue
 
             # Children follow guardian
@@ -147,16 +155,21 @@ class MovementSystem:
 
                 # Occupancy check — try sidestep if blocked
                 occupant = occupied.get(wp)
+                my_children = children_of.get(eid, set())
                 if occupant is not None and occupant != eid:
-                    side = self._try_sidestep(
-                        pos, wp, world.map, occupied, eid
-                    )
-                    if side is not None:
-                        final_tile = side
-                        steps -= 1
-                        advanced = True
-                        waypoints_consumed += 1
-                    break
+                    if occupant in my_children:
+                        pass  # свой ребёнок — проходим насквозь
+                    else:
+                        side = self._try_sidestep(
+                            pos, wp, world.map, occupied, eid
+                        )
+                        if side is not None:
+                            final_tile = side
+                            steps -= 1
+                            advanced = True
+                            waypoints_consumed += 1
+                            continue
+                        break  # sidestep не удался — стоп
 
                 final_tile = wp
                 steps -= 1
@@ -165,6 +178,29 @@ class MovementSystem:
 
             if advanced:
                 old_tile: Coord = (pos.tile_x, pos.tile_y)
+
+                # Если на целевом тайле стоит свой ребёнок — подвинуть его
+                child_on_tile = occupied.get(final_tile)
+                if child_on_tile is not None and child_on_tile in children_of.get(eid, set()):
+                    child_pos = world.get_component(child_on_tile, Position)
+                    if child_pos is not None:
+                        # Ребёнок встаёт на старое место родителя или рядом
+                        child_dest = old_tile
+                        if occupied.get(child_dest) is not None and occupied.get(child_dest) != child_on_tile:
+                            child_dest = self._find_free_adjacent(
+                                final_tile, world.map, occupied, child_on_tile
+                            ) or old_tile
+                        child_old = (child_pos.tile_x, child_pos.tile_y)
+                        if occupied.get(child_old) == child_on_tile:
+                            del occupied[child_old]
+                        occupied[child_dest] = child_on_tile
+                        child_pos.prev_tile_x = child_pos.tile_x
+                        child_pos.prev_tile_y = child_pos.tile_y
+                        child_pos.tile_x = child_dest[0]
+                        child_pos.tile_y = child_dest[1]
+                        child_pos.float_x = float(child_dest[0])
+                        child_pos.float_y = float(child_dest[1])
+
                 # Update occupancy
                 if occupied.get(old_tile) == eid:
                     del occupied[old_tile]
@@ -303,6 +339,24 @@ class MovementSystem:
             if occ is not None and occ != eid:
                 continue
             return (nx, ny)
+        return None
+
+    @staticmethod
+    def _find_free_adjacent(
+        center: Coord, tile_map, occupied: Dict[Coord, int], eid: int,
+    ) -> Optional[Coord]:
+        """Find a free passable tile adjacent to center."""
+        cx, cy = center
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if dx == 0 and dy == 0:
+                    continue
+                nx, ny = cx + dx, cy + dy
+                if not tile_map.is_passable(nx, ny):
+                    continue
+                occ = occupied.get((nx, ny))
+                if occ is None or occ == eid:
+                    return (nx, ny)
         return None
 
     @staticmethod

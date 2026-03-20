@@ -1,24 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c :*)",
-      "Bash(python tools/batch_run.py:*)",
-      "Bash(python tools/analyze.py:*)",
-      "Bash(python -m pytest:*)",
-      "Bash(python main.py --headless:*)",
-      "Bash(mkdir:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
-      "Bash(git show:*)",
-      "Bash(cat :*)",
-      "Bash(ls :*)",
-      "Bash(head :*)",
-      "Bash(wc :*)",
-      "Bash(sleep :*)"
+      "Bash"
     ]
   }
 }
